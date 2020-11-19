@@ -12,22 +12,19 @@ TMATE_SERVER_IP="${TMATE_SERVER_IP:-127.0.0.1}"
 
 # tmate-ssh-server env vars
 SSH_PORT_LISTEN=${SSH_PORT_LISTEN:-2200}
-SSH_PORT_ADVERTIZE=${SSH_PORT_ADVERTIZE:-${SSH_PORT_LISTEN}}
+SSH_PORT_ADVERTISE=${SSH_PORT_ADVERTISE:-${SSH_PORT_LISTEN}}
 SSH_KEYS_PATH="${SSH_KEYS_PATH:-/keys}"
 
 mkdir -p "${SSH_KEYS_PATH#/}"
 
 docker build -t ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_VERSION} .
 
-ID=$(docker ps -f name=${DOCKER_IMAGE_NAME} -q)
-
-[ -z "${ID}" ] || docker rm -vf "${ID}"
+docker rm -vf "${DOCKER_IMAGE_NAME}" || true
 
 docker run                                        \
   -d                                              \
   --cap-add SYS_ADMIN                             \
-  -p ${SSH_PORT_ADVERTIZE}:${SSH_PORT_ADVERTIZE}  \
-  -e SSH_PORT_ADVERTIZE=${SSH_PORT_ADVERTIZE}     \
+  -e SSH_PORT_ADVERTISE=${SSH_PORT_ADVERTISE}     \
   -e SSH_PORT_LISTEN=${SSH_PORT_LISTEN}           \
   -e SSH_KEYS_PATH=${SSH_KEYS_PATH}               \
   -e TMATE_SERVER_IP=${TMATE_SERVER_IP}           \
@@ -35,6 +32,7 @@ docker run                                        \
   -e DOCKER_RUN_USER=${DOCKER_RUN_USER}           \
   --name "${DOCKER_IMAGE_NAME}"                   \
   -v "${PWD}:${DOCKER_BIND_MOUNT}"                \
+  -p ${SSH_PORT_ADVERTISE}:${SSH_PORT_ADVERTISE}  \
   --hostname "${TMATE_SERVER_IP}"                 \
   ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_VERSION}
 
